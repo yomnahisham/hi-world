@@ -1,0 +1,10 @@
+# name repo commit top files
+picorv32 https://github.com/YosysHQ/picorv32 ef203c2b0a3fb793280f5114941416c425c5b461 picorv32 picorv32.v
+aes https://github.com/secworks/aes 80dc4718e1dcbbdb4b0dd1bdb393d8f7b98981dc aes_core src/rtl/aes_core.v,src/rtl/aes_encipher_block.v,src/rtl/aes_decipher_block.v,src/rtl/aes_key_mem.v,src/rtl/aes_sbox.v,src/rtl/aes_inv_sbox.v
+sha256 https://github.com/secworks/sha256 837c5cc396f001d18f2c765721c585716eb439ae sha256_core src/rtl/sha256_core.v,src/rtl/sha256_k_constants.v,src/rtl/sha256_w_mem.v
+epfl_adder https://github.com/lsils/benchmarks 82d8cc6910419298e713a46644ed59fd3df53038 - arithmetic/adder.v
+epfl_bar https://github.com/lsils/benchmarks 82d8cc6910419298e713a46644ed59fd3df53038 - arithmetic/bar.v
+epfl_max https://github.com/lsils/benchmarks 82d8cc6910419298e713a46644ed59fd3df53038 - arithmetic/max.v
+epfl_sin https://github.com/lsils/benchmarks 82d8cc6910419298e713a46644ed59fd3df53038 - arithmetic/sin.v
+epfl_multiplier https://github.com/lsils/benchmarks 82d8cc6910419298e713a46644ed59fd3df53038 - arithmetic/multiplier.v
+epfl_sqrt https://github.com/lsils/benchmarks 82d8cc6910419298e713a46644ed59fd3df53038 - arithmetic/sqrt.v
