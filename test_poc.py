@@ -110,6 +110,15 @@ def test_score():
     best, label = score.best_subset(["A", "B", "C"], 1, hits, orc, cl)
     assert best == ["B"] and label == "exhaustive", (best, label)
 
+import selectors_
+
+def test_parse_llm():
+    pl = ["a(A=*)", "b(A=*)", "c(A=*)"]
+    txt = 'blah\n```json\n{"picks": [{"key": "b(A=*)", "why": "x"}, {"key": "zzz", "why": "y"}]}\n```'
+    assert selectors_.parse_llm(txt, pl, 2) == ["b(A=*)"]
+    assert selectors_.parse_llm("no json here", pl, 2) == []
+    assert selectors_.parse_llm('```json\n{"picks": "oops"}\n```', pl, 2) == []
+
 if __name__ == "__main__":
     for name, fn in list(globals().items()):
         if name.startswith("test_"):
