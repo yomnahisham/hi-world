@@ -1,0 +1,13 @@
+# claude 2.1.282 (Claude Code)
+All 27 violating paths share one carry chain: the long `o311ai_0`/`a311oi_1` spine. So WNS only moves if I fuse cells on that spine. The tail-end xnor/xor clusters (K5 onward) each touch at most 6 paths and never the worst one, so I dropped them.
+
+On the spine, every candidate enters through a main input (x2 or x3), not through the absorbed nor2/inv/and2 cell. That means the path still goes through only one cell, and the saving comes from the fused cell being faster than the one it replaces. The `o311ai_0` cells are the undersized, slow ones, and the fused cell is built at _1 size:
+- **K1** covers two `o311ai_0` instances averaging about 0.39 ns, both on all 27 paths.
+- **K2** is a single `o311ai_0` at 0.45 ns, also on all 27 paths. Its worst transistor stack is 4 deep, which is still at the build limit.
+- **K4** is also an `o311ai_0`, but that instance is only 0.128 ns, so there is little to gain.
+
+**K0** already uses a _1 cell, but it has 11 instances, about 10 on each worst path (272 violating traversals). Placing the entry input nearest the output should give a small speed-up per instance, and that adds up to the largest total effect on both WNS and TNS. Its only complemented inputs (x3, x4) are off the timing path, so the extra inverters don't cost delay. **K3** is the same idea as K0 with only 2 instances, so K0 wins. None of K0, K1 and K2 share cells, so all three can apply on the same path.
+
+```json
+{"picks": [{"key": "a311oi_1(A1=*,A2=*,A3=*,B1=nor2_1(A=*,B=*),C1=*)", "why": "11 instances, ~10 per worst path, 272 violating traversals; entry input (A3) placed nearest the output gives a small gain many times over, on all 27 paths"}, {"key": "o311ai_0(A1=clkinv_1(A=*),A2=*,A3=*,B1=*,C1=*)", "why": "replaces two slow o311ai_0 cells (~0.39 ns each) on every violating path with a _1-sized cell, 3-deep stacks at most"}, {"key": "o311ai_0(A1=and2_0(A=*,B=*),A2=*,A3=*,B1=*,C1=*)", "why": "the slowest single spine cell (o311ai_0, 0.45 ns) on all 27 paths; 4-deep stack is still buildable at _1 sizing"}]}
+```
