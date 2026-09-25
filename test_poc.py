@@ -90,6 +90,26 @@ def test_oracle_sanity():
     r = res["k"]["ratio"]
     assert all(0.75 < x < 1.25 for x in r) and None not in res["k"]["fused_ps"], res
 
+import score
+
+def test_score():
+    hits = [{"slack": -0.10, "hits": [
+                {"key": "A", "members": ["u1", "u2"], "entry": 0, "delay": 0.2},
+                {"key": "B", "members": ["u2", "u3"], "entry": 0, "delay": 0.3},   # overlaps A on u2
+                {"key": "C", "members": ["u9", "u8"], "entry": 0, "delay": 0.1}]},
+            {"slack": -0.05, "hits": [{"key": "C", "members": ["u7", "u6"], "entry": 0, "delay": 0.1}]}]
+    orc = {"A": {"feasible": True, "ratio": [0.8], "tx_orig": 10, "tx_fused": 6},
+           "B": {"feasible": True, "ratio": [0.5], "tx_orig": 10, "tx_fused": 6},
+           "C": {"feasible": True, "ratio": [1.3], "tx_orig": 10, "tx_fused": 6}}
+    cl = {"A": {"count": 1, "crit": 1}, "B": {"count": 1, "crit": 1}, "C": {"count": 2, "crit": 1}}
+    s = score.score(["A", "B"], hits, orc, cl)
+    # only B (saving 0.15) applies on path 0 -> slack -0.10+0.15=+0.05 ; WNS = path1 = -0.05
+    assert abs(s["dwns"] - 50.0) < 1e-6, s
+    s = score.score(["C"], hits, orc, cl)          # slower fused cell: clipped, no gain
+    assert s["dwns"] == 0 and s["dtns"] == 0
+    best, label = score.best_subset(["A", "B", "C"], 1, hits, orc, cl)
+    assert best == ["B"] and label == "exhaustive", (best, label)
+
 if __name__ == "__main__":
     for name, fn in list(globals().items()):
         if name.startswith("test_"):
