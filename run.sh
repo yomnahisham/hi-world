@@ -21,4 +21,5 @@ grep -v '^#' designs.txt | while read name repo commit top files; do
   sed -e "s|@LIB@|$LIB|;s|@NET@|$out/net.v|;s|@TOP@|$tn|;s|@P@|$p|;s|@N@|$N|" sta.tcl > "$out/sta2.tcl"
   sta -no_init -no_splash -exit "$out/sta2.tcl" </dev/null > "$out/paths.rpt"
   echo "{\"top\": \"$tn\", \"period\": $p}" > "$out/meta.json"
+  python3 mine.py "$out" </dev/null
 done

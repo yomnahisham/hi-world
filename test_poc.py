@@ -43,6 +43,24 @@ def test_parsers():
     assert sorted(a["inputs"]) == ["A1", "A2", "B1"] and "Y" in a["outputs"] and not a["seq"]
     assert lib["sky130_fd_sc_hd__dfxtp_1"]["seq"]
 
+import mine
+
+def test_mine_toy():
+    lib = {"nand2": {"inputs": ["A", "B"], "outputs": {"Y": "!(A&B)"}, "seq": False, "area": 1},
+           "inv":   {"inputs": ["A"], "outputs": {"Y": "!A"}, "seq": False, "area": 1}}
+    # u1 = nand(a,b) -> u2 = inv -> port ; u3 = nand(a, u1)  => u1 has fanout 2: no (u1,u2) cluster
+    cells = {"u1": {"type": "nand2", "pins": {"A": 1, "B": 2, "Y": 3}},
+             "u2": {"type": "inv",   "pins": {"A": 3, "Y": 4}},
+             "u3": {"type": "nand2", "pins": {"A": 1, "B": 3, "Y": 5}},
+             "u4": {"type": "inv",   "pins": {"A": 5, "Y": 6}}}
+    driver = {3: ("u1", "Y"), 4: ("u2", "Y"), 5: ("u3", "Y"), 6: ("u4", "Y")}
+    loads = {1: [("u1", "A"), ("u3", "A")], 2: [("u1", "B")], 3: [("u2", "A"), ("u3", "B")],
+             5: [("u4", "A")], 4: [("$port", "o1")], 6: [("$port", "o2")]}
+    cl = mine.mine(cells, driver, loads, lib)
+    assert list(cl) == ["inv(A=nand2(A=*,B=*))"], list(cl)
+    inst = cl["inv(A=nand2(A=*,B=*))"]["instances"][0]
+    assert sorted(inst["members"]) == ["u3", "u4"] and inst["leaves"] == [["u3", "A"], ["u3", "B"]]
+
 if __name__ == "__main__":
     for name, fn in list(globals().items()):
         if name.startswith("test_"):
