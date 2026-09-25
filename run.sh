@@ -22,4 +22,5 @@ grep -v '^#' designs.txt | while read name repo commit top files; do
   sta -no_init -no_splash -exit "$out/sta2.tcl" </dev/null > "$out/paths.rpt"
   echo "{\"top\": \"$tn\", \"period\": $p}" > "$out/meta.json"
   python3 mine.py "$out" </dev/null
+  python3 tier2.py "$out" </dev/null || echo "$name: tier2 failed" >> results/failed.txt
 done
