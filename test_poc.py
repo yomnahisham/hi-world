@@ -61,6 +61,35 @@ def test_mine_toy():
     inst = cl["inv(A=nand2(A=*,B=*))"]["instances"][0]
     assert sorted(inst["members"]) == ["u3", "u4"] and inst["leaves"] == [["u3", "A"], ["u3", "B"]]
 
+import cellgen
+
+def test_logic():
+    # f = a&b (and2): minimal SOP one cube; realized as nand stage + output inverter
+    r = cellgen.realize(2, 0b1000)
+    assert r["feasible"] and r["invert_out"] and r["tx"] == 6, r
+    # f = !(a&b | c) (a21oi): single stage, no inverters, 6 transistors
+    tt = sum(1 << m for m in range(8) if not (((m & 1) and (m >> 1 & 1)) or (m >> 2 & 1)))
+    r = cellgen.realize(3, tt)
+    assert r["feasible"] and not r["invert_out"] and r["neg_inputs"] == [] and r["tx"] == 6, r
+    # 6-input AND needs a 6-deep stack: infeasible
+    assert not cellgen.realize(6, 1 << 63)["feasible"]
+    # constant function: infeasible, no crash
+    assert not cellgen.realize(2, 0b1111)["feasible"]
+    # sop covers exactly
+    for n, tt in [(3, 0b10010110), (4, 0xBEEF)]:
+        cubes = cellgen.sop(n, tt)
+        got = sum(1 << m for m in range(1 << n) if any((m & mk) == v for mk, v in cubes))
+        assert got == tt
+
+def test_oracle_sanity():
+    """nand2 -> inv equals and2: fused and original must be within 25%."""
+    lib = netlist.load_liberty(os.environ["LIB"])
+    tree = {"cell": "sky130_fd_sc_hd__inv_1", "out": "Y",
+            "ins": {"A": {"cell": "sky130_fd_sc_hd__nand2_1", "out": "Y", "ins": {"A": None, "B": None}}}}
+    res = cellgen.measure({"k": {"tree": tree, "n_in": 2, "late": 0, "load": 0.005}}, lib)
+    r = res["k"]["ratio"]
+    assert all(0.75 < x < 1.25 for x in r) and None not in res["k"]["fused_ps"], res
+
 if __name__ == "__main__":
     for name, fn in list(globals().items()):
         if name.startswith("test_"):
